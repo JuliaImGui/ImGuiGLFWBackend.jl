@@ -1,10 +1,17 @@
 name = "ImGuiGLFWBackend"
 uuid = "623d79b3-9695-4e60-bd7e-2a5aabaa6933"
-authors = ["Gnimuc <qiyupei@gmail.com> and contributors"]
+authors = ["Yupei Qi <qiyupei@gmail.com>"]
 version = "0.1.0"
 
+[deps]
+GLFW = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
+LibCImGui = "9be01004-c4f5-478b-abeb-cb32b114cf5e"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
 [compat]
-julia = "1"
+GLFW = "3.4"
+LibCImGui = "1.82.0"
+julia = "1.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
