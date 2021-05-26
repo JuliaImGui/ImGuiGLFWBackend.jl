@@ -1,0 +1,12 @@
+[general]
+library_name = "libglfw"
+output_file_path = "../src/LibGLFW.jl"
+module_name = "LibGLFW"
+export_symbol_prefixes = ["glfw", "GLFW"]
+use_deterministic_symbol = true
+prologue_file_path = "./prologue.jl"
+use_julia_native_enum_type = true
+
+printer_blacklist = [
+    "GLAPIENTRY",
+]

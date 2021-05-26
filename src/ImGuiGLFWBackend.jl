@@ -4,6 +4,9 @@ using Libdl
 using GLFW
 using LibCImGui
 
+include("LibGLFW.jl")
+using .LibGLFW
+
 const GLFW_GET_CLIPBOARD_TEXT_FUNCPTR = Ref{Ptr{Cvoid}}(C_NULL)
 const GLFW_SET_CLIPBOARD_TEXT_FUNCPTR = Ref{Ptr{Cvoid}}(C_NULL)
 
