@@ -8,8 +8,8 @@ Base.@kwdef mutable struct Context
     ClientApi::GlfwClientApi = GlfwClientApi_Unknown
     Time::Cfloat = Cfloat(0.0f0)
     MouseJustPressed::Vector{Bool} = [false, false, false, false, false]
-    MouseCursors::Vector{Ptr{GLFWcursor}} = fill(C_NULL, Int(ImGuiMouseCursor_COUNT))
-    KeyOwnerWindows::Vector{Ptr{GLFWwindow}} = fill(C_NULL, 512)
+    MouseCursors::Vector{Ptr{GLFWcursor}} = fill(Ptr{GLFWcursor}(C_NULL), Int(ImGuiMouseCursor_COUNT))
+    KeyOwnerWindows::Vector{Ptr{GLFWwindow}} = fill(Ptr{GLFWwindow}(C_NULL), 512)
     InstalledCallbacks::Bool = true
     WantUpdateMonitors::Bool = true
     PrevUserCallbackMousebutton::Ptr{Cvoid} = C_NULL

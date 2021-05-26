@@ -123,12 +123,12 @@ end
 function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
     # update buttons
     io::Ptr{ImGuiIO} = igGetIO()
-    for i = 1:length(ctx.MouseJustPressed)
+    for i = 0:length(ctx.MouseJustPressed)-1
         # if a mouse press event came, always pass it as "mouse held this frame",
         # so we don't miss click-release events that are shorter than 1 frame.
-        mousedown = ctx.MouseJustPressed[i] || glfwGetMouseButton(ctx.Window, i-1)
-        c_set!(io.MouseDown, i-1, mousedown)
-        ctx.MouseJustPressed[i] = false
+        mousedown = ctx.MouseJustPressed[i+1] || (glfwGetMouseButton(ctx.Window, i) != 0)
+        c_set!(io.MouseDown, i, mousedown)
+        ctx.MouseJustPressed[i+1] = false
     end
 
     # update mouse position
@@ -153,7 +153,7 @@ function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
                 mx_ref, my_ref = Ref{Cdouble}(0), Ref{Cdouble}(0)
                 glfwGetCursorPos(window, mx_ref, my_ref)
                 mouse_x, mouse_y = mx_ref[], my_ref[]
-                if unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable != 0
+                if (unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable) != 0
                     # Multi-viewport mode: mouse position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
                     wx_ref, wy_ref = Ref{Cint}(0), Ref{Cint}(0)
                     window_x, window_y = wx_ref[], wy_ref[]
@@ -167,7 +167,7 @@ function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
         end
         md = unsafe_load(io.MouseDown)
         for i = 0:length(md)-1
-            c_set!(io.MouseDown, i, md[i+1] | glfwGetMouseButton(window, i))
+            c_set!(io.MouseDown, i, (md[i+1] | (glfwGetMouseButton(window, i) != 0)))
         end
     end
     # TODO: pending glfw 3.4 GLFW_HAS_MOUSE_PASSTHROUGH
@@ -176,7 +176,7 @@ end
 
 function ImGui_ImplGlfw_UpdateMouseCursor(ctx::Context)
     io::Ptr{ImGuiIO} = igGetIO()
-    if (unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_NoMouseCursorChange != 0) ||
+    if ((unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_NoMouseCursorChange) != 0) ||
         glfwGetInputMode(ctx.Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED
         return nothing
     end
@@ -204,11 +204,11 @@ end
 
 function ImGui_ImplGlfw_UpdateMonitors(ctx::Context)
     platform_io::Ptr{ImGuiPlatformIO} = igGetPlatformIO()
-    num_monitors = Ref{Cint}(0)
-	ptr = glfwGetMonitors(num_monitors)
-	glfw_monitors = unsafe_wrap(Array, ptr, num_monitors[])
-    monitors_ptr = Libc.malloc(num_monitors[] * sizeof(ImGuiPlatformMonitor))
-    for n = 0:num_monitors[]-1
+    monitors_count = Ref{Cint}(0)
+	ptr = glfwGetMonitors(monitors_count)
+	glfw_monitors = unsafe_wrap(Array, ptr, monitors_count[])
+    monitors_ptr::Ptr{ImGuiPlatformMonitor} = Libc.malloc(monitors_count[] * sizeof(ImGuiPlatformMonitor))
+    for n = 0:monitors_count[]-1
         glfw_monitor = glfw_monitors[n+1]
         x_ref, y_ref = Ref{Cint}(0), Ref{Cint}(0)
         glfwGetMonitorPos(glfw_monitor, x_ref, y_ref)
@@ -224,7 +224,7 @@ function ImGui_ImplGlfw_UpdateMonitors(ctx::Context)
         mptr.WorkSize = ImVec2(vid_mode.width, vid_mode.height)
         mptr.DpiScale = x_scale
     end
-    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(num_monitors[], num_monitors[], monitors_ptr)
+    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(monitors_count[], monitors_count[], monitors_ptr)
     ctx.WantUpdateMonitors = false
     return nothing
 end
@@ -237,9 +237,9 @@ function new_frame(ctx::Context)
     w_ref, h_ref = Ref{Cint}(0), Ref{Cint}(0)
     glfwGetWindowSize(ctx.Window, w_ref, h_ref)
     w, h = w_ref[], h_ref[]
-    w_ref, h_ref = Ref{Cint}(0), Ref{Cint}(0)
-    glfwGetFramebufferSize(ctx.Window, w_ref, h_ref)
-    display_w, display_h = w_ref[], h_ref[]
+    dw_ref, dh_ref = Ref{Cint}(0), Ref{Cint}(0)
+    glfwGetFramebufferSize(ctx.Window, dw_ref, dh_ref)
+    display_w, display_h = dw_ref[], dh_ref[]
     io.DisplaySize = ImVec2(Cfloat(w), Cfloat(h))
     if w > 0 && h > 0
         w_scale = Cfloat(display_w / w)

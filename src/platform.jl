@@ -27,8 +27,8 @@ function ImGui_ImplGlfw_CreateWindow(viewport::Ptr{ImGuiViewport})
     glfwWindowHint(GLFW_VISIBLE, false)
     glfwWindowHint(GLFW_FOCUSED, false)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, false)
-    glfwWindowHint(GLFW_DECORATED, (unsafe_load(viewport.Flags) & ImGuiViewportFlags_NoDecoration != 0) ? false : true)
-    glfwWindowHint(GLFW_FLOATING, unsafe_load(viewport.Flags) & ImGuiViewportFlags_TopMost != 0)
+    glfwWindowHint(GLFW_DECORATED, ((unsafe_load(viewport.Flags) & ImGuiViewportFlags_NoDecoration) != 0) ? false : true)
+    glfwWindowHint(GLFW_FLOATING, (unsafe_load(viewport.Flags) & ImGuiViewportFlags_TopMost) != 0)
 
     share_window = ctx.ClientApi == GlfwClientApi_OpenGL ? ctx.Window : C_NULL
     window_size = unsafe_load(viewport.Size)

@@ -87,7 +87,7 @@ end
 function ImGui_ImplGlfw_WindowPosCallback(window::Ptr{GLFWwindow}, x::Cint, y::Cint)::Cvoid
     viewport::Ptr{ImGuiViewport} = igFindViewportByPlatformHandle(window)
     if viewport != C_NULL
-        data::Ptr{ImGuiViewportDataGlfw} = viewport.PlatformUserData
+        data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
         if data != C_NULL
             ignore_event = igGetFrameCount() ≤ (unsafe_load(data.IgnoreWindowPosEventFrame) + 1)
             ignore_event && return nothing
@@ -100,7 +100,7 @@ end
 function ImGui_ImplGlfw_WindowSizeCallback(window::Ptr{GLFWwindow}, x::Cint, y::Cint)::Cvoid
     viewport::Ptr{ImGuiViewport} = igFindViewportByPlatformHandle(window)
     if viewport != C_NULL
-        data::Ptr{ImGuiViewportDataGlfw} = viewport.PlatformUserData
+        data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
         if data != C_NULL
             ignore_event = igGetFrameCount() ≤ (unsafe_load(data.IgnoreWindowSizeEventFrame) + 1)
             ignore_event && return nothing
