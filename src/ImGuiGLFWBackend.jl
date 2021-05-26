@@ -15,8 +15,6 @@ function __init__()
     GLFW_SET_CLIPBOARD_TEXT_FUNCPTR[] = dlsym(dlopen(GLFW.libglfw), :glfwSetClipboardString)
 end
 
-Base.convert(::Type{Cint}, x::GLFW.Key) = Cint(x)
-
 function c_get(x::Ptr{NTuple{N,T}}, i) where {N,T}
     unsafe_load(Ptr{T}(x), Integer(i)+1)
 end
@@ -28,10 +26,11 @@ end
 include("constants.jl")
 export GlfwClientApi, GlfwClientApi_Unknown, GlfwClientApi_OpenGL, GlfwClientApi_Vulkan
 
+include("callbacks.jl")
+
 include("context.jl")
 export set_default_glfw_window_size, set_default_glfw_window_title
 
-include("callbacks.jl")
 include("platform.jl")
 include("interface.jl")
 

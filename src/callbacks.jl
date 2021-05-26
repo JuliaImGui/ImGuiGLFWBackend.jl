@@ -1,25 +1,25 @@
-function ImGui_ImplGlfw_MouseButtonCallback(window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Cint)::Cvoid
-    ctx_ptr::Ptr{Context} = ccall((:glfwGetWindowUserPointer, GLFW.libglfw), Ptr{Cvoid}, (GLFW.Window,), window)
-    ctx = unsafe_pointer_to_objref(ctx_ptr)
+function ImGui_ImplGlfw_ErrorCallback(code::Cint, description::Ptr{Cchar})::Cvoid
+    @error "GLFW ERROR: code $code msg: $(unsafe_string(description))"
+    return nothing
+end
 
+function ImGui_ImplGlfw_MouseButtonCallback(window::Ptr{GLFWwindow}, button::Cint, action::Cint, mods::Cint)::Cvoid
+    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
     if ctx.PrevUserCallbackMousebutton != C_NULL
-        ccall(ctx.PrevUserCallbackMousebutton, Cvoid, (GLFW.Window, GLFW.MouseButton, GLFW.Action, Cint), window, button, action, mods)
+        ccall(ctx.PrevUserCallbackMousebutton, Cvoid, (Ptr{GLFWwindow}, Cint, Cint, Cint), window, button, action, mods)
     end
 
-    b = Cint(button)
-    if action == GLFW.PRESS && b ≥ 0 && b < length(ctx.MouseJustPressed)
-        ctx.MouseJustPressed[b+1] = true
+    if action == GLFW_PRESS && button ≥ 0 && button < length(ctx.MouseJustPressed)
+        ctx.MouseJustPressed[button+1] = true
     end
 
     return nothing
 end
 
-function ImGui_ImplGlfw_ScrollCallback(window::GLFW.Window, xoffset::Cdouble, yoffset::Cdouble)::Cvoid
-    ctx_ptr::Ptr{Context} = ccall((:glfwGetWindowUserPointer, GLFW.libglfw), Ptr{Cvoid}, (GLFW.Window,), window)
-    ctx = unsafe_pointer_to_objref(ctx_ptr)
-
+function ImGui_ImplGlfw_ScrollCallback(window::Ptr{GLFWwindow}, xoffset::Cdouble, yoffset::Cdouble)::Cvoid
+    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
     if ctx.PrevUserCallbackScroll != C_NULL
-        ccall(ctx.PrevUserCallbackScroll, Cvoid, (GLFW.Window, Cdouble, Cdouble), window, xoffset, yoffset)
+        ccall(ctx.PrevUserCallbackScroll, Cvoid, (Ptr{GLFWwindow}, Cdouble, Cdouble), window, xoffset, yoffset)
     end
 
     io::Ptr{ImGuiIO} = igGetIO()
@@ -29,67 +29,54 @@ function ImGui_ImplGlfw_ScrollCallback(window::GLFW.Window, xoffset::Cdouble, yo
     return nothing
 end
 
-function ImGui_ImplGlfw_KeyCallback(window::GLFW.Window, key, scancode, action, mods)::Cvoid
-    ctx_ptr::Ptr{Context} = ccall((:glfwGetWindowUserPointer, GLFW.libglfw), Ptr{Cvoid}, (GLFW.Window,), window)
-    ctx = unsafe_pointer_to_objref(ctx_ptr)
-
+function ImGui_ImplGlfw_KeyCallback(window::Ptr{GLFWwindow}, key::Cint, scancode::Cint, action::Cint, mods::Cint)::Cvoid
+    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
     if ctx.PrevUserCallbackKey != C_NULL
-        ccall(ctx.PrevUserCallbackKey, Cvoid, (GLFW.Window, Cint, Cint, Cint, Cint), window, key, scancode, action, mods)
+        ccall(ctx.PrevUserCallbackKey, Cvoid, (Ptr{GLFWwindow}, Cint, Cint, Cint, Cint), window, key, scancode, action, mods)
     end
 
     io::Ptr{ImGuiIO} = igGetIO()
-    k = Cint(key)
-    if k ≥ 0 && k < length(unsafe_load(io.KeysDown))
-        if action == GLFW.PRESS
-            c_set!(io.KeysDown, k, true)
-            ctx.KeyOwnerWindows[k+1] = window
+    if key ≥ 0 && key < length(unsafe_load(io.KeysDown))
+        if action == GLFW_PRESS
+            c_set!(io.KeysDown, key, true)
+            ctx.KeyOwnerWindows[key+1] = window
         end
-        if action == GLFW.RELEASE
-            c_set!(io.KeysDown, k, false)
-            ctx.KeyOwnerWindows[k+1] = GLFW.Window(C_NULL)
+        if action == GLFW_RELEASE
+            c_set!(io.KeysDown, key, false)
+            ctx.KeyOwnerWindows[key+1] = C_NULL
         end
     end
 
     # modifiers are not reliable across systems
-    io.KeyCtrl = c_get(io.KeysDown, GLFW.KEY_LEFT_CONTROL) || c_get(io.KeysDown, GLFW.KEY_RIGHT_CONTROL)
-    io.KeyShift = c_get(io.KeysDown, GLFW.KEY_LEFT_SHIFT) || c_get(io.KeysDown, GLFW.KEY_RIGHT_SHIFT)
-    io.KeyAlt = c_get(io.KeysDown, GLFW.KEY_LEFT_ALT) || c_get(io.KeysDown, GLFW.KEY_RIGHT_ALT)
+    io.KeyCtrl = c_get(io.KeysDown, GLFW_KEY_LEFT_CONTROL) || c_get(io.KeysDown, GLFW_KEY_RIGHT_CONTROL)
+    io.KeyShift = c_get(io.KeysDown, GLFW_KEY_LEFT_SHIFT) || c_get(io.KeysDown, GLFW_KEY_RIGHT_SHIFT)
+    io.KeyAlt = c_get(io.KeysDown, GLFW_KEY_LEFT_ALT) || c_get(io.KeysDown, GLFW_KEY_RIGHT_ALT)
     if Sys.iswindows()
         io.KeySuper = false
     else
-        io.KeySuper = c_get(io.KeysDown, GLFW.KEY_LEFT_SUPER) || c_get(io.KeysDown, GLFW.KEY_RIGHT_SUPER)
+        io.KeySuper = c_get(io.KeysDown, GLFW_KEY_LEFT_SUPER) || c_get(io.KeysDown, GLFW_KEY_RIGHT_SUPER)
     end
 
     return nothing
 end
 
-function ImGui_ImplGlfw_CharCallback(window::GLFW.Window, x)::Cvoid
-    ctx_ptr::Ptr{Context} = ccall((:glfwGetWindowUserPointer, GLFW.libglfw), Ptr{Cvoid}, (GLFW.Window,), window)
-    ctx = unsafe_pointer_to_objref(ctx_ptr)
-
+function ImGui_ImplGlfw_CharCallback(window::Ptr{GLFWwindow}, x::Cuint)::Cvoid
+    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
     if ctx.PrevUserCallbackChar != C_NULL
-        ccall(ctx.PrevUserCallbackChar, Cvoid, (GLFW.Window, Cuint), window, x)
+        ccall(ctx.PrevUserCallbackChar, Cvoid, (Ptr{GLFWwindow}, Cuint), window, x)
     end
 
-    0 < Cuint(x) < 0x10000 && ImGuiIO_AddInputCharacter(igGetIO(), x)
+    0 < x < 0x10000 && ImGuiIO_AddInputCharacter(igGetIO(), x)
 
     return nothing
 end
 
-function ImGui_ImplGlfw_MonitorCallback(monitor::GLFW.Monitor, x::Cint)::Cvoid
-    ctx_ptr::Ptr{Context} = ccall((:glfwGetWindowUserPointer, GLFW.libglfw), Ptr{Cvoid}, (GLFW.Window,), window)
-    ctx = unsafe_pointer_to_objref(ctx_ptr)
-
-    if ctx.PrevUserCallbackMonitor != C_NULL
-        ccall(ctx.PrevUserCallbackMonitor, Cvoid, (GLFW.Window, Cint), window, x)
-    end
-
+function ImGui_ImplGlfw_MonitorCallback(monitor::Ptr{GLFWmonitor}, x::Cint)::Cvoid
     ctx.WantUpdateMonitors = true
-
     return nothing
 end
 
-function ImGui_ImplGlfw_WindowCloseCallback(window::GLFW.Window)::Cvoid
+function ImGui_ImplGlfw_WindowCloseCallback(window::Ptr{GLFWwindow})::Cvoid
     viewport::Ptr{ImGuiViewport} = igFindViewportByPlatformHandle(window)
     if viewport != C_NULL
         viewport.PlatformRequestClose = true
@@ -97,7 +84,7 @@ function ImGui_ImplGlfw_WindowCloseCallback(window::GLFW.Window)::Cvoid
     return nothing
 end
 
-function ImGui_ImplGlfw_WindowPosCallback(window::GLFW.Window, x::Cint, y::Cint)::Cvoid
+function ImGui_ImplGlfw_WindowPosCallback(window::Ptr{GLFWwindow}, x::Cint, y::Cint)::Cvoid
     viewport::Ptr{ImGuiViewport} = igFindViewportByPlatformHandle(window)
     if viewport != C_NULL
         data::Ptr{ImGuiViewportDataGlfw} = viewport.PlatformUserData
@@ -110,7 +97,7 @@ function ImGui_ImplGlfw_WindowPosCallback(window::GLFW.Window, x::Cint, y::Cint)
     return nothing
 end
 
-function ImGui_ImplGlfw_WindowSizeCallback(window::GLFW.Window, x::Cint, y::Cint)::Cvoid
+function ImGui_ImplGlfw_WindowSizeCallback(window::Ptr{GLFWwindow}, x::Cint, y::Cint)::Cvoid
     viewport::Ptr{ImGuiViewport} = igFindViewportByPlatformHandle(window)
     if viewport != C_NULL
         data::Ptr{ImGuiViewportDataGlfw} = viewport.PlatformUserData
