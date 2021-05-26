@@ -224,7 +224,7 @@ function ImGui_ImplGlfw_UpdateMonitors(ctx::Context)
         mptr.WorkSize = ImVec2(vid_mode.width, vid_mode.height)
         mptr.DpiScale = x_scale
     end
-    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(length(ctx.Monitors), length(ctx.Monitors), monitors_ptr)
+    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(num_monitors[], num_monitors[], monitors_ptr)
     ctx.WantUpdateMonitors = false
     return nothing
 end

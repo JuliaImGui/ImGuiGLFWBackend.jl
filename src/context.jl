@@ -10,14 +10,13 @@ Base.@kwdef mutable struct Context
     MouseJustPressed::Vector{Bool} = [false, false, false, false, false]
     MouseCursors::Vector{Ptr{GLFWcursor}} = fill(C_NULL, Int(ImGuiMouseCursor_COUNT))
     KeyOwnerWindows::Vector{Ptr{GLFWwindow}} = fill(C_NULL, 512)
-    InstalledCallbacks::Bool = false
+    InstalledCallbacks::Bool = true
     WantUpdateMonitors::Bool = true
     PrevUserCallbackMousebutton::Ptr{Cvoid} = C_NULL
     PrevUserCallbackScroll::Ptr{Cvoid} = C_NULL
     PrevUserCallbackKey::Ptr{Cvoid} = C_NULL
     PrevUserCallbackChar::Ptr{Cvoid} = C_NULL
     PrevUserCallbackMonitor::Ptr{Cvoid} = C_NULL
-    Monitors::Vector{ImGuiPlatformMonitor} = Vector{ImGuiPlatformMonitor}(undef, 0)
 end
 
 Base.show(io::IO, x::Context) = print(io, "Context(id=$(x.id))")
@@ -43,6 +42,9 @@ function create_context(window=C_NULL; install_callbacks::Bool=true, client_api:
     else
         ctx = Context(; Window=window)
     end
+
+    ctx.InstalledCallbacks = install_callbacks
+    ctx.ClientApi = client_api
 
     # store the ctx in a global variable to prevent it from being GC-ed
     __GLFW_CONTEXTS[ctx.id] = ctx
