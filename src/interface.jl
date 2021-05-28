@@ -110,9 +110,9 @@ function shutdown(ctx::Context)
         ctx.InstalledCallbacks = false
     end
 
-    for cursor_n = 1:ImGuiMouseCursor_COUNT
-        glfwDestroyCursor(ctx.MouseCursors[cursor_n])
-        ctx.MouseCursors[cursor_n] = C_NULL
+    for i = 1:length(ctx.MouseCursors)
+        glfwDestroyCursor(ctx.MouseCursors[i])
+        ctx.MouseCursors[i] = C_NULL
     end
 
     ctx.ClientApi = GlfwClientApi_Unknown
