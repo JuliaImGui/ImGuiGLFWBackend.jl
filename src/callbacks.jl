@@ -4,7 +4,7 @@ function ImGui_ImplGlfw_ErrorCallback(code::Cint, description::Ptr{Cchar})::Cvoi
 end
 
 function ImGui_ImplGlfw_MouseButtonCallback(window::Ptr{GLFWwindow}, button::Cint, action::Cint, mods::Cint)::Cvoid
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
+    ctx = unsafe_pointer_to_objref(glfwGetWindowUserPointer(window))
     if ctx.PrevUserCallbackMousebutton != C_NULL
         ccall(ctx.PrevUserCallbackMousebutton, Cvoid, (Ptr{GLFWwindow}, Cint, Cint, Cint), window, button, action, mods)
     end
@@ -17,7 +17,7 @@ function ImGui_ImplGlfw_MouseButtonCallback(window::Ptr{GLFWwindow}, button::Cin
 end
 
 function ImGui_ImplGlfw_ScrollCallback(window::Ptr{GLFWwindow}, xoffset::Cdouble, yoffset::Cdouble)::Cvoid
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
+    ctx = unsafe_pointer_to_objref(glfwGetWindowUserPointer(window))
     if ctx.PrevUserCallbackScroll != C_NULL
         ccall(ctx.PrevUserCallbackScroll, Cvoid, (Ptr{GLFWwindow}, Cdouble, Cdouble), window, xoffset, yoffset)
     end
@@ -30,7 +30,7 @@ function ImGui_ImplGlfw_ScrollCallback(window::Ptr{GLFWwindow}, xoffset::Cdouble
 end
 
 function ImGui_ImplGlfw_KeyCallback(window::Ptr{GLFWwindow}, key::Cint, scancode::Cint, action::Cint, mods::Cint)::Cvoid
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
+    ctx = unsafe_pointer_to_objref(glfwGetWindowUserPointer(window))
     if ctx.PrevUserCallbackKey != C_NULL
         ccall(ctx.PrevUserCallbackKey, Cvoid, (Ptr{GLFWwindow}, Cint, Cint, Cint, Cint), window, key, scancode, action, mods)
     end
@@ -61,7 +61,7 @@ function ImGui_ImplGlfw_KeyCallback(window::Ptr{GLFWwindow}, key::Cint, scancode
 end
 
 function ImGui_ImplGlfw_CharCallback(window::Ptr{GLFWwindow}, x::Cuint)::Cvoid
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(glfwGetWindowUserPointer(window)))
+    ctx = unsafe_pointer_to_objref(glfwGetWindowUserPointer(window))
     if ctx.PrevUserCallbackChar != C_NULL
         ccall(ctx.PrevUserCallbackChar, Cvoid, (Ptr{GLFWwindow}, Cuint), window, x)
     end

@@ -1,6 +1,6 @@
 module LibGLFW
 
-using ..GLFW.GLFW_jll
+using GLFW.GLFW_jll
 
 
 # typedef void ( * GLFWglproc ) ( void )

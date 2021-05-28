@@ -19,28 +19,31 @@ end
 
 function ImGui_ImplGlfw_CreateWindow(viewport::Ptr{ImGuiViewport})
     io::Ptr{ImGuiIO} = igGetIO()
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(unsafe_load(io.UserData)))
+    ctx = unsafe_pointer_to_objref(unsafe_load(io.UserData))
 
     data::Ptr{ImGuiViewportDataGlfw} = Libc.malloc(sizeof(ImGuiViewportDataGlfw))
+    data.Window = C_NULL
+    data.WindowOwned = true
+    data.IgnoreWindowPosEventFrame = -1
+    data.IgnoreWindowSizeEventFrame = -1
     viewport.PlatformUserData = data
 
     glfwWindowHint(GLFW_VISIBLE, false)
     glfwWindowHint(GLFW_FOCUSED, false)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, false)
-    glfwWindowHint(GLFW_DECORATED, ((unsafe_load(viewport.Flags) & ImGuiViewportFlags_NoDecoration) != 0) ? false : true)
-    glfwWindowHint(GLFW_FLOATING, (unsafe_load(viewport.Flags) & ImGuiViewportFlags_TopMost) != 0)
+    glfwWindowHint(GLFW_DECORATED, !(unsafe_load(viewport.Flags) & ImGuiViewportFlags_NoDecoration == ImGuiViewportFlags_NoDecoration))
+    glfwWindowHint(GLFW_FLOATING, unsafe_load(viewport.Flags) & ImGuiViewportFlags_TopMost == ImGuiViewportFlags_TopMost)
 
     share_window = ctx.ClientApi == GlfwClientApi_OpenGL ? ctx.Window : C_NULL
-    window_size = unsafe_load(viewport.Size)
-    wx, wy = trunc(Cint, window_size.x), trunc(Cint, window_size.y)
+    wx, wy = trunc(Cint, unsafe_load(viewport.Size.x)), trunc(Cint, unsafe_load(viewport.Size.y))
     data_Window = glfwCreateWindow(wx, wy, "No Title Yet", C_NULL, share_window)
     viewport.PlatformHandle = data_Window
     if Sys.iswindows()
         viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, GLFW.libglfw), Ptr{Cvoid}, (Ptr{GLFWwindow},), data_Window)
     end
-    pos = unsafe_load(viewport.Pos)
-    px, py = trunc(Cint, pos.x), trunc(Cint, pos.y)
-    glfwSetWindowPos(data_Window, px, py)
+    data.Window = data_Window
+
+    glfwSetWindowPos(data_Window, trunc(Cint, unsafe_load(viewport.Pos.x)), trunc(Cint, unsafe_load(viewport.Pos.y)))
 
     # install window userdata
     glfwSetWindowUserPointer(data_Window, unsafe_load(io.UserData))
@@ -58,17 +61,12 @@ function ImGui_ImplGlfw_CreateWindow(viewport::Ptr{ImGuiViewport})
         glfwSwapInterval(0)
     end
 
-    data.Window = data_Window
-    data.WindowOwned = true
-    data.IgnoreWindowPosEventFrame = -1
-    data.IgnoreWindowSizeEventFrame = -1
-
     return nothing
 end
 
 function ImGui_ImplGlfw_DestroyWindow(viewport::Ptr{ImGuiViewport})
     io::Ptr{ImGuiIO} = igGetIO()
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(unsafe_load(io.UserData)))
+    ctx = unsafe_pointer_to_objref(unsafe_load(io.UserData))
 
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
     if data != C_NULL
@@ -107,9 +105,8 @@ end
 
 function ImGui_ImplGlfw_GetWindowPos(viewport::Ptr{ImGuiViewport})
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
-    x_ref, y_ref = Ref{Cint}(0), Ref{Cint}(0)
-    glfwGetWindowPos(unsafe_load(data.Window), x_ref, y_ref)
-    x, y = x_ref[], y_ref[]
+    x, y = Cint(0), Cint(0)
+    @c glfwGetWindowPos(unsafe_load(data.Window), &x, &y)
     return ImVec2(Cfloat(x), Cfloat(y))
 end
 
@@ -123,9 +120,8 @@ end
 
 function ImGui_ImplGlfw_GetWindowSize(viewport::Ptr{ImGuiViewport})
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
-    w_ref, h_ref = Ref{Cint}(0), Ref{Cint}(0)
-    glfwGetWindowSize(unsafe_load(data.Window), w_ref, h_ref)
-    w, h = w_ref[], h_ref[]
+    w, h = Cint(0), Cint(0)
+    @c glfwGetWindowSize(unsafe_load(data.Window), &w, &h)
     return ImVec2(Cfloat(w), Cfloat(h))
 end
 
@@ -149,12 +145,12 @@ function ImGui_ImplGlfw_SetWindowFocus(viewport::Ptr{ImGuiViewport})
     return nothing
 end
 
-function ImGui_ImplGlfw_GetWindowFocus(viewport::Ptr{ImGuiViewport})
+function ImGui_ImplGlfw_GetWindowFocus(viewport::Ptr{ImGuiViewport})::Bool
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
     return glfwGetWindowAttrib(unsafe_load(data.Window), GLFW_FOCUSED) != 0
 end
 
-function ImGui_ImplGlfw_GetWindowMinimized(viewport::Ptr{ImGuiViewport})
+function ImGui_ImplGlfw_GetWindowMinimized(viewport::Ptr{ImGuiViewport})::Bool
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
     return glfwGetWindowAttrib(unsafe_load(data.Window), GLFW_ICONIFIED) != 0
 end
@@ -169,7 +165,7 @@ function ImGui_ImplGlfw_RenderWindow(viewport::Ptr{ImGuiViewport}, userdata::Ptr
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
     # FIXME: pass through userdata(add a new field in ImGuiViewportDataGlfw)
     io::Ptr{ImGuiIO} = igGetIO()
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(unsafe_load(io.UserData)))
+    ctx = unsafe_pointer_to_objref(unsafe_load(io.UserData))
     if ctx.ClientApi == GlfwClientApi_OpenGL
         glfwMakeContextCurrent(unsafe_load(data.Window))
     end
@@ -180,7 +176,7 @@ function ImGui_ImplGlfw_SwapBuffers(viewport::Ptr{ImGuiViewport}, userdata::Ptr{
     data::Ptr{ImGuiViewportDataGlfw} = unsafe_load(viewport.PlatformUserData)
     # FIXME: pass through userdata(add a new field in ImGuiViewportDataGlfw)
     io::Ptr{ImGuiIO} = igGetIO()
-    ctx = unsafe_pointer_to_objref(Ptr{Context}(unsafe_load(io.UserData)))
+    ctx = unsafe_pointer_to_objref(unsafe_load(io.UserData))
     if ctx.ClientApi == GlfwClientApi_OpenGL
         glfwMakeContextCurrent(unsafe_load(data.Window))
         glfwSwapBuffers(unsafe_load(data.Window))

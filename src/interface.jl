@@ -88,7 +88,7 @@ function init(ctx::Context)
         main_viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, GLFW.libglfw), Ptr{Cvoid}, (Ptr{Cvoid},), ctx.Window)
     end
 
-    if unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable != 0
+    if unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable == ImGuiConfigFlags_ViewportsEnable
         ImGui_ImplGlfw_InitPlatformInterface(ctx)
     end
 
@@ -123,12 +123,12 @@ end
 function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
     # update buttons
     io::Ptr{ImGuiIO} = igGetIO()
-    for i = 0:length(ctx.MouseJustPressed)-1
+    for n = 0:length(ctx.MouseJustPressed)-1
         # if a mouse press event came, always pass it as "mouse held this frame",
         # so we don't miss click-release events that are shorter than 1 frame.
-        mousedown = ctx.MouseJustPressed[i+1] || (glfwGetMouseButton(ctx.Window, i) != 0)
-        c_set!(io.MouseDown, i, mousedown)
-        ctx.MouseJustPressed[i+1] = false
+        is_down = ctx.MouseJustPressed[n+1] || glfwGetMouseButton(ctx.Window, n) == GLFW_PRESS
+        c_set!(io.MouseDown, n, is_down)
+        ctx.MouseJustPressed[n+1] = false
     end
 
     # update mouse position
@@ -143,21 +143,18 @@ function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
         window = unsafe_load(viewport.PlatformHandle)
         @assert window != C_NULL
 
-        is_focused = glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0
-        if is_focused
+        if glfwGetWindowAttrib(window, GLFW_FOCUSED) != 0
             if unsafe_load(io.WantSetMousePos)
                 x = mouse_pos_backup.x - unsafe_load(viewport.Pos.x)
                 y = mouse_pos_backup.y - unsafe_load(viewport.Pos.y)
                 glfwSetCursorPos(window, Cdouble(x), Cdouble(y))
             else
-                mx_ref, my_ref = Ref{Cdouble}(0), Ref{Cdouble}(0)
-                glfwGetCursorPos(window, mx_ref, my_ref)
-                mouse_x, mouse_y = mx_ref[], my_ref[]
-                if (unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable) != 0
+                mouse_x, mouse_y = Cdouble(0), Cdouble(0)
+                @c glfwGetCursorPos(window, &mouse_x, &mouse_y)
+                if unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable == ImGuiConfigFlags_ViewportsEnable
                     # Multi-viewport mode: mouse position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
-                    wx_ref, wy_ref = Ref{Cint}(0), Ref{Cint}(0)
-                    glfwGetWindowPos(window, wx_ref, wy_ref)
-                    window_x, window_y = wx_ref[], wy_ref[]
+                    window_x, window_y = Cint(0), Cint(0)
+                    @c glfwGetWindowPos(window, &window_x, &window_y)
                     io.MousePos = ImVec2(Cfloat(mouse_x + window_x), Cfloat(mouse_y + window_y))
                 else
                     # Single viewport mode: mouse position in client window coordinates (io.MousePos is (0,0) when the mouse is on the upper-left corner of the app window)
@@ -166,9 +163,8 @@ function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
             end
 
         end
-        md = unsafe_load(io.MouseDown)
-        for i = 0:length(md)-1
-            c_set!(io.MouseDown, i, (md[i+1] | (glfwGetMouseButton(window, i) != 0)))
+        for n = 0:length(ctx.MouseJustPressed)-1
+            c_set!(io.MouseDown, n, c_get(io.MouseDown, n) || glfwGetMouseButton(window, n) == GLFW_PRESS)
         end
     end
     # TODO: pending glfw 3.4 GLFW_HAS_MOUSE_PASSTHROUGH
@@ -177,7 +173,7 @@ end
 
 function ImGui_ImplGlfw_UpdateMouseCursor(ctx::Context)
     io::Ptr{ImGuiIO} = igGetIO()
-    if ((unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_NoMouseCursorChange) != 0) ||
+    if (unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_NoMouseCursorChange == ImGuiConfigFlags_NoMouseCursorChange) ||
         glfwGetInputMode(ctx.Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED
         return nothing
     end
@@ -205,28 +201,37 @@ end
 
 function ImGui_ImplGlfw_UpdateMonitors(ctx::Context)
     platform_io::Ptr{ImGuiPlatformIO} = igGetPlatformIO()
-    monitors_count = Ref{Cint}(0)
-	ptr = glfwGetMonitors(monitors_count)
-	glfw_monitors = unsafe_wrap(Array, ptr, monitors_count[])
-    monitors_ptr::Ptr{ImGuiPlatformMonitor} = Libc.malloc(monitors_count[] * sizeof(ImGuiPlatformMonitor))
-    for n = 0:monitors_count[]-1
-        glfw_monitor = glfw_monitors[n+1]
-        x_ref, y_ref = Ref{Cint}(0), Ref{Cint}(0)
-        glfwGetMonitorPos(glfw_monitor, x_ref, y_ref)
-        x, y = x_ref[], y_ref[]
+    monitors_count = Cint(0)
+	ptr = @c glfwGetMonitors(&monitors_count)
+	glfw_monitors = unsafe_wrap(Array, ptr, monitors_count)
+    monitors_ptr::Ptr{ImGuiPlatformMonitor} = Libc.malloc(monitors_count * sizeof(ImGuiPlatformMonitor))
+    for i = 1:monitors_count
+        glfw_monitor = glfw_monitors[i]
+        mptr::Ptr{ImGuiPlatformMonitor} = monitors_ptr + (i-1) * sizeof(ImGuiPlatformMonitor)
+
+        x, y = Cint(0), Cint(0)
+        @c glfwGetMonitorPos(glfw_monitor, &x, &y)
         vid_mode = unsafe_load(glfwGetVideoMode(glfw_monitor))
-        xs_ref, ys_ref = Ref{Cfloat}(0), Ref{Cfloat}(0)
-        glfwGetMonitorContentScale(glfw_monitor, xs_ref, ys_ref)
-        x_scale, y_scale = xs_ref[], ys_ref[]
-        mptr::Ptr{ImGuiPlatformMonitor} = monitors_ptr + n * sizeof(ImGuiPlatformMonitor)
         mptr.MainPos = ImVec2(x, y)
         mptr.MainSize = ImVec2(vid_mode.width, vid_mode.height)
         mptr.WorkPos = ImVec2(x, y)
         mptr.WorkSize = ImVec2(vid_mode.width, vid_mode.height)
+
+        w, h = Cint(0), Cint(0)
+        @c glfwGetMonitorWorkarea(glfw_monitors[i], &x, &y, &w, &h)
+        if w > 0 && h > 0
+            mptr.WorkPos = ImVec2(Cfloat(x), Cfloat(y))
+            mptr.WorkSize = ImVec2(Cfloat(w), Cfloat(h))
+        end
+
+        x_scale, y_scale = Cfloat(0), Cfloat(0)
+        @c glfwGetMonitorContentScale(glfw_monitor, &x_scale, &y_scale)
         mptr.DpiScale = x_scale
     end
-    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(monitors_count[], monitors_count[], monitors_ptr)
+
+    platform_io.Monitors = ImVector_ImGuiPlatformMonitor(monitors_count, monitors_count, monitors_ptr)
     ctx.WantUpdateMonitors = false
+
     return nothing
 end
 
@@ -235,12 +240,10 @@ function new_frame(ctx::Context)
     @assert ImFontAtlas_IsBuilt(unsafe_load(io.Fonts)) "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame()."
 
     # setup display size (every frame to accommodate for window resizing)
-    w_ref, h_ref = Ref{Cint}(0), Ref{Cint}(0)
-    glfwGetWindowSize(ctx.Window, w_ref, h_ref)
-    w, h = w_ref[], h_ref[]
-    dw_ref, dh_ref = Ref{Cint}(0), Ref{Cint}(0)
-    glfwGetFramebufferSize(ctx.Window, dw_ref, dh_ref)
-    display_w, display_h = dw_ref[], dh_ref[]
+    w, h = Cint(0), Cint(0)
+    display_w, display_h = Cint(0), Cint(0)
+    @c glfwGetWindowSize(ctx.Window, &w, &h)
+    @c glfwGetFramebufferSize(ctx.Window, &display_w, &display_h)
     io.DisplaySize = ImVec2(Cfloat(w), Cfloat(h))
     if w > 0 && h > 0
         w_scale = Cfloat(display_w / w)

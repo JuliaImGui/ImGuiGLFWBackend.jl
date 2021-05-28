@@ -23,6 +23,8 @@ function c_set!(x::Ptr{NTuple{N,T}}, i, v) where {N,T}
     unsafe_store!(Ptr{T}(x), v, Integer(i)+1)
 end
 
+include("macros.jl")
+
 include("constants.jl")
 export GlfwClientApi, GlfwClientApi_Unknown, GlfwClientApi_OpenGL, GlfwClientApi_Vulkan
 
