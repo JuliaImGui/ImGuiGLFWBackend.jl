@@ -29,6 +29,7 @@ try
         igNewFrame()
 
         igShowDemoWindow(Ref(true))
+        igShowMetricsWindow(Ref(true))
 
         # rendering
         igRender()
@@ -37,7 +38,7 @@ try
         glfwGetFramebufferSize(window, w_ref, h_ref)
         display_w, display_h = w_ref[], h_ref[]
         glViewport(0, 0, display_w, display_h)
-        glClearColor(0.0f0, 0.0f0, 0.0f0, 1.0f0)
+        glClearColor(0.45, 0.55, 0.60, 1.00)
         glClear(GL_COLOR_BUFFER_BIT)
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData())
 

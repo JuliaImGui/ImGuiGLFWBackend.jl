@@ -156,6 +156,7 @@ function ImGui_ImplGlfw_UpdateMousePosAndButtons(ctx::Context)
                 if (unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable) != 0
                     # Multi-viewport mode: mouse position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
                     wx_ref, wy_ref = Ref{Cint}(0), Ref{Cint}(0)
+                    glfwGetWindowPos(window, wx_ref, wy_ref)
                     window_x, window_y = wx_ref[], wy_ref[]
                     io.MousePos = ImVec2(Cfloat(mouse_x + window_x), Cfloat(mouse_y + window_y))
                 else
