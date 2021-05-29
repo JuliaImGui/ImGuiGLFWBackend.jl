@@ -13,7 +13,7 @@ pkg> add ImGuiGLFWBackend
 
 ## Example
 
-```
+```julia
 using ImGuiGLFWBackend
 using ImGuiGLFWBackend.LibCImGui
 using ImGuiGLFWBackend.LibGLFW
