@@ -72,6 +72,8 @@ function ImGui_ImplGlfw_CharCallback(window::Ptr{GLFWwindow}, x::Cuint)::Cvoid
 end
 
 function ImGui_ImplGlfw_MonitorCallback(monitor::Ptr{GLFWmonitor}, x::Cint)::Cvoid
+    io::Ptr{ImGuiIO} = igGetIO()
+    ctx = unsafe_pointer_to_objref(unsafe_load(io.UserData))
     ctx.WantUpdateMonitors = true
     return nothing
 end

@@ -62,6 +62,7 @@ Relese the ctx so it can be GC-ed.
 release_context(ctx::Context) = delete!(__GLFW_CONTEXTS, ctx.id)
 
 function create_default_context()
+    glfwDefaultWindowHints()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
     @static if Sys.isapple()
