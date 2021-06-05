@@ -85,7 +85,7 @@ function init(ctx::Context)
     main_viewport::Ptr{ImGuiViewport} = igGetMainViewport()
     main_viewport.PlatformHandle = Ptr{Cvoid}(ctx.Window)
     if Sys.iswindows()
-        main_viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, GLFW.libglfw), Ptr{Cvoid}, (Ptr{Cvoid},), ctx.Window)
+        main_viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, libglfw), Ptr{Cvoid}, (Ptr{Cvoid},), ctx.Window)
     end
 
     if unsafe_load(io.ConfigFlags) & ImGuiConfigFlags_ViewportsEnable == ImGuiConfigFlags_ViewportsEnable
