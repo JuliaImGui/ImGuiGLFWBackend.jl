@@ -1,5 +1,5 @@
 using Clang.Generators
-using GLFW.GLFW_jll
+using GLFW_jll
 
 cd(@__DIR__)
 

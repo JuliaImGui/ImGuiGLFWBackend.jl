@@ -3,6 +3,7 @@
 [![CI](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/ci.yml)
 [![TagBot](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/TagBot.yml/badge.svg)](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/TagBot.yml)
 [![Coverage](https://codecov.io/gh/JuliaImGui/ImGuiGLFWBackend.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaImGui/ImGuiGLFWBackend.jl)
+[![](https://img.shields.io/badge/design%20principle-KISS-orange)](https://en.wikipedia.org/wiki/KISS_principle)
 
 Julia GLFW backend for ImGui.
 

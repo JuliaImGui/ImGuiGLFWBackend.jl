@@ -39,7 +39,7 @@ function ImGui_ImplGlfw_CreateWindow(viewport::Ptr{ImGuiViewport})
     data_Window = glfwCreateWindow(wx, wy, "No Title Yet", C_NULL, share_window)
     viewport.PlatformHandle = data_Window
     if Sys.iswindows()
-        viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, GLFW.libglfw), Ptr{Cvoid}, (Ptr{GLFWwindow},), data_Window)
+        viewport.PlatformHandleRaw = ccall((:glfwGetWin32Window, libglfw), Ptr{Cvoid}, (Ptr{GLFWwindow},), data_Window)
     end
     data.Window = data_Window
 

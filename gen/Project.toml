@@ -1,7 +1,7 @@
 [deps]
 Clang = "40e3b903-d033-50b4-a0cc-940c62c95e31"
-GLFW = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
+GLFW_jll = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 
 [compat]
 Clang = "0.14.0"
-GLFW = "3.4"
+GLFW_jll = "3.3"

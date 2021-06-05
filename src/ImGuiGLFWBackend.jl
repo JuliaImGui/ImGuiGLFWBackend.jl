@@ -1,7 +1,7 @@
 module ImGuiGLFWBackend
 
 using Libdl
-using GLFW
+using GLFW_jll
 using LibCImGui
 
 include("LibGLFW.jl")
@@ -11,8 +11,9 @@ const GLFW_GET_CLIPBOARD_TEXT_FUNCPTR = Ref{Ptr{Cvoid}}(C_NULL)
 const GLFW_SET_CLIPBOARD_TEXT_FUNCPTR = Ref{Ptr{Cvoid}}(C_NULL)
 
 function __init__()
-    GLFW_GET_CLIPBOARD_TEXT_FUNCPTR[] = dlsym(dlopen(GLFW.libglfw), :glfwGetClipboardString)
-    GLFW_SET_CLIPBOARD_TEXT_FUNCPTR[] = dlsym(dlopen(GLFW.libglfw), :glfwSetClipboardString)
+    glfwInit() == GLFW_TRUE && atexit(glfwTerminate)
+    GLFW_GET_CLIPBOARD_TEXT_FUNCPTR[] = dlsym(dlopen(libglfw), :glfwGetClipboardString)
+    GLFW_SET_CLIPBOARD_TEXT_FUNCPTR[] = dlsym(dlopen(libglfw), :glfwSetClipboardString)
 end
 
 function c_get(x::Ptr{NTuple{N,T}}, i) where {N,T}

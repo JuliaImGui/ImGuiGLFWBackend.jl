@@ -1,1 +1,1 @@
-using GLFW.GLFW_jll
+using GLFW_jll
