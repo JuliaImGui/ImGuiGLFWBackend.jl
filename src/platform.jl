@@ -76,7 +76,7 @@ function ImGui_ImplGlfw_DestroyWindow(viewport::Ptr{ImGuiViewport})
             win = Ptr{GLFWwindow}(unsafe_load(data.Window))
             for i = 0:length(ctx.KeyOwnerWindows)-1
                 if ctx.KeyOwnerWindows[i+1] == win
-                    ImGui_ImplGlfw_KeyCallback(win, i, 0, GLFW_RELEASE, 0)
+                    ImGui_ImplGlfw_KeyCallback(win, Cint(i), Cint(0), Cint(GLFW_RELEASE), Cint(0))
                 end
             end
             glfwDestroyWindow(win)
