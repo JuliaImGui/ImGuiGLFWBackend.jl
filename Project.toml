@@ -9,7 +9,7 @@ LibCImGui = "9be01004-c4f5-478b-abeb-cb32b114cf5e"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
-LibCImGui = "1.82.0"
+LibCImGui = "~1.82.0"
 GLFW_jll = "3.3"
 julia = "1.6"
 
