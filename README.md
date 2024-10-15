@@ -1,3 +1,5 @@
+*This project is archived in favour of using the official GLFW backend: https://gnimuc.github.io/CImGui.jl/stable/backends/*
+
 # ImGuiGLFWBackend
 
 [![CI](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaImGui/ImGuiGLFWBackend.jl/actions/workflows/ci.yml)
